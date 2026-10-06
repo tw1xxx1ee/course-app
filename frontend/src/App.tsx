@@ -1,18 +1,21 @@
+import { Navigate, Route, Routes } from 'react-router'
+import { Layout } from './components/Layout'
+import { GameListPage } from './pages/GameListPage'
+import { GameDetailsPage } from './pages/GameDetailsPage'
+import { AddGamePage } from './pages/AddGamePage'
+import { NotFoundPage } from './pages/NotFoundPage'
 import './App.css'
-
-const appTitle: string = 'Каталог игр'
 
 export default function App() {
   return (
-    <main className="app">
-      <header>
-        <h1>{appTitle}</h1>
-        <p>Личная коллекция игр и отслеживание прохождения.</p>
-      </header>
-      <section aria-labelledby="items-title">
-        <h2 id="items-title">Мои игры</h2>
-        <p>Здесь появится список ваших игр.</p>
-      </section>
-    </main>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Navigate to="/games" replace />} />
+        <Route path="games" element={<GameListPage />} />
+        <Route path="games/new" element={<AddGamePage />} />
+        <Route path="games/:id" element={<GameDetailsPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   )
 }

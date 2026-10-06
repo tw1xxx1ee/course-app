@@ -1,9 +1,131 @@
+:root {
+  --accent: #5b2a86;
+  --accent-light: #efe6f8;
+  --border: #dddae3;
+  --muted: #6b6672;
+  --danger: #b00020;
+}
+
 .app {
   max-width: 960px;
   margin: 0 auto;
-  padding: 32px 20px;
+  padding: 0 20px 32px;
 }
 
-.app section { margin-top: 32px; }
+a { color: var(--accent); }
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
-.app h1 { color: #5b2a86; }
+/* Шапка */
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+nav { display: flex; flex-wrap: wrap; gap: 8px; }
+nav a {
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+nav a.active { background: var(--accent-light); font-weight: bold; }
+
+h1 { margin: 24px 0 16px; }
+
+/* Список игр */
+
+.game-list { display: grid; gap: 16px; }
+@media (min-width: 760px) {
+  .game-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.game-card {
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.game-card:hover { border-color: var(--accent); }
+.game-card h2 { margin: 0 0 4px; font-size: 20px; }
+.game-card h2 a { text-decoration: none; }
+.game-card h2 a:hover { text-decoration: underline; }
+
+.game-meta { margin: 0 0 12px; color: var(--muted); }
+
+.game-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rating { font-weight: bold; }
+
+/* Статус прохождения */
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+.badge-planned { background: #ececec; color: #444444; }
+.badge-playing { background: #e3eefc; color: #1d4f91; }
+.badge-completed { background: #e2f4e5; color: #1e6b2e; }
+
+/* Страница игры */
+
+.back-link { display: inline-block; margin-top: 24px; }
+.details h1 { margin-top: 12px; margin-bottom: 8px; }
+
+.details-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 24px 0;
+}
+.details-list dt { color: var(--muted); }
+.details-list dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Кнопки */
+
+.button {
+  display: inline-block;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.button:hover { background: #47206a; }
+.button:disabled { background: #b9a9c8; cursor: not-allowed; }
+
+.empty {
+  padding: 32px;
+  text-align: center;
+  background: #ffffff;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+.empty p { margin-top: 0; }

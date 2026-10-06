@@ -13,7 +13,7 @@
 
 ## Стек
 
-React, TypeScript, Vite. Node.js 24.19.0 (см. `.node-version`).
+React, TypeScript, Vite, React Router. Node.js 24.19.0 (см. `.node-version`).
 
 ## Запуск
 
@@ -36,14 +36,36 @@ npm run preview
 
 ## Что работает сейчас
 
-- Начальный экран с названием, описанием и разделом «Мои игры».
+- Список из пяти демонстрационных игр и карточка игры по адресу.
+- Страница добавления (пока заглушка).
+- Общий layout с навигацией, отдельные сообщения для неизвестной страницы и отсутствующей игры.
+
+## Страницы
+
+| Адрес | Страница |
+|-------|----------|
+| `/` | перенаправление на `/games` |
+| `/games` | список игр |
+| `/games/:id` | карточка игры |
+| `/games/new` | добавление игры |
+| любой другой | «Страница не найдена» |
 
 ## Где что лежит
 
 ```
 frontend/src/
-  App.tsx                       начальный экран
-  main.tsx                      запуск React
+  App.tsx                       маршруты
+  main.tsx                      запуск React и роутера
+  types/game.ts                 тип игры
+  data/demoGames.ts             пять демонстрационных игр
+  data/gameStatuses.ts          русские подписи статусов
+  components/Layout.tsx         шапка и навигация, общие для всех страниц
+  components/GameCard.tsx       карточка игры в списке
+  components/StatusBadge.tsx    цветной значок статуса
+  pages/GameListPage.tsx        список игр
+  pages/GameDetailsPage.tsx     подробности игры
+  pages/AddGamePage.tsx         добавление игры
+  pages/NotFoundPage.tsx        неизвестный адрес
 ```
 
 ## Использование ИИ
@@ -54,7 +76,9 @@ frontend/src/
 прохождением сценариев из `docs/progress.md`.
 
 - ЛР 1 — Claude Haiku 4.5: объяснение пути index.html → main.tsx → App.tsx, рутинная очистка шаблона Vite.
+- ЛР 2 — Claude Sonnet 5: маршруты React Router (Route, Outlet, useParams) и типизация props; Claude Haiku 4.5: демонстрационные записи.
 
 ## Текущие ограничения
 
-Список игр, формы и сохранение данных будут добавлены в следующих работах.
+Записи демонстрационные и хранятся в `frontend/src/data/demoGames.ts`.
+Формы и сохранение данных будут добавлены в следующих работах.

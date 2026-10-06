@@ -1,0 +1,7 @@
+[
+  { "id": "pc", "name": "PC" },
+  { "id": "ps5", "name": "PlayStation 5" },
+  { "id": "xbox", "name": "Xbox Series X|S" },
+  { "id": "switch", "name": "Nintendo Switch" },
+  { "id": "mobile", "name": "Мобильные устройства" }
+]

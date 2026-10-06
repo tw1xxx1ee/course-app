@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { GameDraft } from '../types/game'
 import { gameStatuses, gameStatusLabels, isGameStatus } from '../data/gameStatuses'
+import { usePlatforms } from '../hooks/usePlatforms'
+import { PlatformSelect } from './PlatformSelect'
 
 type GameFormProps = {
   initialValues: GameDraft
@@ -16,19 +18,22 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
     initialValues.rating === null ? '' : String(initialValues.rating)
   )
   const [error, setError] = useState('')
+  const { platformsState, retry } = usePlatforms()
+
+  const isPlatformSelected = platformsState.status === 'success' &&
+    platformsState.platforms.some((platform) => platform.id === draft.platform)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const title = draft.title.trim()
-    if (title.length === 0 || title.length > 100) {
-      setError('Название должно содержать от 1 до 100 символов.')
+    if (!isPlatformSelected) {
+      setError('Дождитесь загрузки платформ и выберите платформу.')
       return
     }
 
-    const platform = draft.platform.trim()
-    if (platform === '') {
-      setError('Укажите платформу.')
+    const title = draft.title.trim()
+    if (title.length === 0 || title.length > 100) {
+      setError('Название должно содержать от 1 до 100 символов.')
       return
     }
 
@@ -45,7 +50,7 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
     }
 
     setError('')
-    onSave({ ...draft, title, platform, genre, rating, note: draft.note.trim() })
+    onSave({ ...draft, title, genre, rating, note: draft.note.trim() })
   }
 
   return (
@@ -55,9 +60,11 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
         onChange={(event) => setDraft({ ...draft, title: event.target.value })}
       />
 
-      <label htmlFor="game-platform">Платформа</label>
-      <input id="game-platform" value={draft.platform} required
-        onChange={(event) => setDraft({ ...draft, platform: event.target.value })}
+      <PlatformSelect
+        value={draft.platform}
+        platformsState={platformsState}
+        onChange={(platform) => setDraft({ ...draft, platform })}
+        onRetry={retry}
       />
 
       <label htmlFor="game-genre">Жанр</label>
@@ -92,7 +99,7 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
       {error && <p role="alert" className="error">{error}</p>}
 
       <div className="actions">
-        <button type="submit" className="button">
+        <button type="submit" className="button" disabled={!isPlatformSelected}>
           Сохранить
         </button>
         <button type="button" className="button-secondary" onClick={onCancel}>

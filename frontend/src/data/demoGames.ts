@@ -4,7 +4,7 @@ export const demoGames: Game[] = [
   {
     id: 'g1',
     title: 'The Witcher 3: Wild Hunt',
-    platform: 'PC',
+    platform: 'pc',
     genre: 'RPG',
     status: 'completed',
     rating: 10,
@@ -13,7 +13,7 @@ export const demoGames: Game[] = [
   {
     id: 'g2',
     title: 'Hollow Knight',
-    platform: 'Nintendo Switch',
+    platform: 'switch',
     genre: 'Метроидвания',
     status: 'playing',
     rating: 9,
@@ -22,7 +22,7 @@ export const demoGames: Game[] = [
   {
     id: 'g3',
     title: 'Elden Ring',
-    platform: 'PlayStation 5',
+    platform: 'ps5',
     genre: 'Экшен-RPG',
     status: 'planned',
     rating: null,
@@ -31,7 +31,7 @@ export const demoGames: Game[] = [
   {
     id: 'g4',
     title: 'Stardew Valley',
-    platform: 'PC',
+    platform: 'pc',
     genre: 'Симулятор фермы',
     status: 'completed',
     rating: 8,
@@ -40,7 +40,7 @@ export const demoGames: Game[] = [
   {
     id: 'g5',
     title: 'Hades',
-    platform: 'Xbox Series X|S',
+    platform: 'xbox',
     genre: 'Roguelike',
     status: 'playing',
     rating: 9,

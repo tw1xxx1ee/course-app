@@ -40,6 +40,9 @@ npm run preview
 - Добавление, редактирование (одна общая форма) и удаление игры с подтверждением.
 - Проверка формы: обязательные название, платформа и жанр; оценка от 1 до 10 или не указана.
 - Фильтр по статусу: кнопки с количеством игр, «Все» сбрасывает фильтр.
+- Справочник платформ загружается по HTTP из `frontend/public/demo/platforms.json`
+  (адрес `/demo/platforms.json`); форма показывает загрузку, ошибку, пустой ответ
+  и кнопку «Повторить», черновик при этом не теряется.
 - Общий layout с навигацией, отдельные сообщения для неизвестной страницы и отсутствующей игры.
 
 ## Страницы
@@ -60,17 +63,22 @@ frontend/src/
   App.tsx                       список игр (состояние) и маршруты
   main.tsx                      запуск React и роутера
   types/game.ts                 тип игры и черновика формы
+  types/platform.ts             тип платформы
   data/demoGames.ts             пять демонстрационных игр
   data/gameStatuses.ts          статусы и их русские подписи
   components/Layout.tsx         шапка и навигация, общие для всех страниц
   components/GameCard.tsx       карточка игры в списке
   components/StatusBadge.tsx    цветной значок статуса
   components/GameForm.tsx       форма добавления и редактирования
+  components/PlatformSelect.tsx выбор платформы и состояния загрузки
   pages/GameListPage.tsx        список игр с фильтром
   pages/GameDetailsPage.tsx     подробности игры
   pages/AddGamePage.tsx         добавление игры
   pages/EditGamePage.tsx        редактирование игры
   pages/NotFoundPage.tsx        неизвестный адрес
+  services/platformService.ts   загрузка и проверка справочника платформ
+  hooks/usePlatforms.ts         состояние загрузки платформ и повтор
+frontend/public/demo/platforms.json  справочник платформ
 ```
 
 ## Использование ИИ
@@ -83,6 +91,7 @@ frontend/src/
 - ЛР 1 — Claude Haiku 4.5: объяснение пути index.html → main.tsx → App.tsx, рутинная очистка шаблона Vite.
 - ЛР 2 — Claude Sonnet 5: маршруты React Router (Route, Outlet, useParams) и типизация props; Claude Haiku 4.5: демонстрационные записи.
 - ЛР 3 — Claude Sonnet 5: неизменяемое обновление состояния, общая форма создания и редактирования, разбор предметной проверки оценки.
+- ЛР 4 — Claude Sonnet 5: проверка response.ok и структуры JSON, отмена устаревшего запроса через AbortController.
 
 ## Текущие ограничения
 

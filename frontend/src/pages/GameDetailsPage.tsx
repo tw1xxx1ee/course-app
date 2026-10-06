@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router'
 import type { Game } from '../types/game'
 import { StatusBadge } from '../components/StatusBadge'
+import { getPlatformName, usePlatforms } from '../hooks/usePlatforms'
 
 type GameDetailsPageProps = {
   games: Game[]
@@ -10,6 +11,7 @@ type GameDetailsPageProps = {
 export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { platformsState } = usePlatforms()
   const game = games.find((item) => item.id === id)
 
   if (!game) {
@@ -29,7 +31,7 @@ export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
 
       <dl className="details-list">
         <dt>Платформа</dt>
-        <dd>{game.platform}</dd>
+        <dd>{getPlatformName(platformsState, game.platform)}</dd>
         <dt>Жанр</dt>
         <dd>{game.genre}</dd>
         <dt>Оценка</dt>

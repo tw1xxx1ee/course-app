@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { GameCard } from '../components/GameCard'
 import type { Game, GameStatus } from '../types/game'
 import { gameStatuses, gameStatusLabels } from '../data/gameStatuses'
+import { getPlatformName, usePlatforms } from '../hooks/usePlatforms'
 
 type GameListPageProps = { games: Game[] }
 
@@ -20,6 +21,7 @@ function getFilterLabel(filter: StatusFilter): string {
 
 export function GameListPage({ games }: GameListPageProps) {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const { platformsState } = usePlatforms()
 
   const visibleGames = games.filter((game) => matchesFilter(game, statusFilter))
 
@@ -64,7 +66,7 @@ export function GameListPage({ games }: GameListPageProps) {
         <div className="game-list">
           {visibleGames.map((game) => (
             <GameCard key={game.id} game={game}
-              platformName={game.platform} />
+              platformName={getPlatformName(platformsState, game.platform)} />
           ))}
         </div>
       )}

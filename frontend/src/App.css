@@ -129,3 +129,74 @@ h1 { margin: 24px 0 16px; }
   border-radius: 8px;
 }
 .empty p { margin-top: 0; }
+
+/* Фильтр */
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+.chip {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+.chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+.chip-count { margin-left: 6px; opacity: 0.7; }
+
+/* Дополнительные кнопки */
+
+.button-secondary,
+.button-danger {
+  padding: 10px 18px;
+  border-radius: 6px;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+.button-secondary { border: 1px solid var(--border); }
+.button-danger { border: 1px solid var(--danger); color: var(--danger); }
+.button-danger:hover { background: #fdecef; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+
+/* Форма */
+
+.game-form {
+  display: grid;
+  gap: 6px;
+  max-width: 480px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.game-form label { margin-top: 10px; font-weight: bold; }
+.game-form input,
+.game-form select,
+.game-form textarea {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+.game-form textarea { min-height: 80px; resize: vertical; }
+
+.hint { margin: 0; font-size: 14px; color: var(--muted); }
+.error { margin: 0; color: var(--danger); }
+.field-message { display: flex; align-items: center; gap: 12px; }
+
+/* Пояснение о временном хранении */
+
+.notice {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-light);
+  color: var(--muted);
+}

@@ -11,6 +11,10 @@ export function Layout() {
         </nav>
       </header>
 
+      <p className="notice" role="note">
+        Игры хранятся только в памяти страницы: после обновления вернётся демонстрационный набор.
+      </p>
+
       <main><Outlet /></main>
     </div>
   )

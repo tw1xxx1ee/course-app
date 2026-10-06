@@ -1,10 +1,16 @@
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
+import type { Game } from '../types/game'
 import { StatusBadge } from '../components/StatusBadge'
-import { demoGames } from '../data/demoGames'
 
-export function GameDetailsPage() {
+type GameDetailsPageProps = {
+  games: Game[]
+  onDelete: (id: string) => void
+}
+
+export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
   const { id } = useParams()
-  const game = demoGames.find((item) => item.id === id)
+  const navigate = useNavigate()
+  const game = games.find((item) => item.id === id)
 
   if (!game) {
     return (
@@ -31,6 +37,18 @@ export function GameDetailsPage() {
         <dt>Заметка</dt>
         <dd>{game.note || 'Нет заметки'}</dd>
       </dl>
+
+      <div className="actions">
+        <Link to={`/games/${game.id}/edit`} className="button">Редактировать</Link>
+        <button type="button" className="button-danger" onClick={() => {
+          if (window.confirm(`Удалить игру «${game.title}»?`)) {
+            onDelete(game.id)
+            navigate('/games', { replace: true })
+          }
+        }}>
+          Удалить
+        </button>
+      </div>
     </section>
   )
 }

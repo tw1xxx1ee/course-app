@@ -6,6 +6,7 @@ import { GameListPage } from './pages/GameListPage'
 import { GameDetailsPage } from './pages/GameDetailsPage'
 import { AddGamePage } from './pages/AddGamePage'
 import { EditGamePage } from './pages/EditGamePage'
+import { SummaryPage } from './pages/SummaryPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="games/new" element={<AddGamePage />} />
           <Route path="games/:id" element={<GameDetailsPage />} />
           <Route path="games/:id/edit" element={<EditGamePage />} />
+          <Route path="summary" element={<SummaryPage />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

@@ -13,7 +13,8 @@
 
 ## Стек
 
-React, TypeScript, Vite, React Router, Supabase (PostgreSQL, Auth). Node.js 24.19.0 (см. `.node-version`).
+Frontend: React, TypeScript, Vite, React Router. Backend: Node.js, Express, TypeScript.
+Данные и вход: Supabase (PostgreSQL, Auth). Node.js 24.19.0 (см. `.node-version`).
 
 ## Настройка Supabase
 
@@ -27,6 +28,7 @@ React, TypeScript, Vite, React Router, Supabase (PostgreSQL, Auth). Node.js 24.1
 |------------|---------|
 | `VITE_SUPABASE_URL` | адрес проекта Supabase |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | публичный (publishable) ключ |
+| `VITE_API_BASE_URL` | адрес своего API, локально `http://localhost:3000` |
 
 Secret key и `service_role` в проекте не используются. Файл `.env.local` в Git не попадает.
 
@@ -37,7 +39,17 @@ Secret key и `service_role` в проекте не используются. Ф
 
 ## Запуск
 
-Из корня скачанного проекта:
+Приложение состоит из двух процессов. Запускайте их в разных терминалах из корня проекта.
+
+Backend (API на порту 3000):
+
+```bash
+cd backend
+npm ci
+npm run dev
+```
+
+Frontend (интерфейс на порту 5173):
 
 ```bash
 cd frontend
@@ -45,11 +57,27 @@ npm ci
 npm run dev
 ```
 
+Переменные backend (необязательные, пример — `backend/.env.example`; можно скопировать
+в `backend/.env`): `PORT` — порт, по умолчанию 3000;
+`FRONTEND_ORIGIN` — адрес интерфейса для CORS, по умолчанию `http://localhost:5173`.
+Описание маршрутов — в [docs/api.md](docs/api.md).
+
 ## Проверка сборки
 
-Остановите dev через Ctrl+C. Выполните в frontend:
+Backend:
 
 ```bash
+cd backend
+npm run typecheck
+npm test
+npm run build
+npm start
+```
+
+Frontend (остановите dev через Ctrl+C):
+
+```bash
+cd frontend
 npm run build
 npm run preview
 ```
@@ -65,6 +93,9 @@ npm run preview
 - Добавление, редактирование (одна общая форма) и удаление игры с подтверждением;
   на время запроса кнопка блокируется, при ошибке черновик остаётся в форме.
 - Проверка формы: обязательные название, платформа и жанр; оценка от 1 до 10 или не указана.
+- Экран «Сводка»: интерфейс отправляет статусы игр на свой Node API, сервер считает
+  «всего игр», «пройдено» и «долю пройденных». Если API недоступен — понятная ошибка,
+  работа с играми при этом продолжается.
 - Справочник платформ загружается из таблицы `platforms` в Supabase; форма показывает
   загрузку, ошибку, пустой ответ, кнопки «Повторить» и «Обновить справочник»,
   черновик при этом не теряется.
@@ -80,9 +111,10 @@ npm run preview
 | `/games/:id` | карточка игры |
 | `/games/new` | добавление игры |
 | `/games/:id/edit` | редактирование игры |
+| `/summary` | сводка по коллекции |
 | любой другой | «Страница не найдена» |
 
-Все страницы `/games…` требуют входа: гость перенаправляется на `/auth`.
+Страницы `/games…` и `/summary` требуют входа: гость перенаправляется на `/auth`.
 
 ## Схема данных
 
@@ -125,14 +157,22 @@ frontend/src/
   pages/GameDetailsPage.tsx     подробности игры
   pages/AddGamePage.tsx         добавление игры
   pages/EditGamePage.tsx        редактирование игры
+  pages/SummaryPage.tsx         сводка по коллекции
   pages/NotFoundPage.tsx        неизвестный адрес
   lib/supabase.ts               единый клиент Supabase
   services/platformService.ts   запрос справочника платформ из Supabase и проверка ответа
   services/gameService.ts       запросы игр в Supabase: список с фильтрами, одна игра, CRUD
+  services/summaryService.ts    запрос сводки у своего Node API
   hooks/usePlatforms.ts         состояние загрузки платформ и повтор
   hooks/useAuth.ts              состояние сессии: проверка, гость, вошёл
   hooks/useGames.ts             загрузка списка игр с фильтрами
   hooks/useGame.ts              загрузка одной игры по id из адреса
+backend/src/
+  index.ts                      сервер Express: CORS, маршруты, ответы 404 и ошибки
+  summary.ts                    расчёт сводки и проверка тела запроса
+  summary.test.ts               тесты расчёта и проверки
+  errors.ts                     ошибка с HTTP-статусом
+docs/api.md                     описание маршрутов API
 supabase/migrations/            SQL: таблицы, ограничения, права и политики
 supabase/seed.sql               начальные строки справочника платформ
 ```
@@ -151,8 +191,12 @@ supabase/seed.sql               начальные строки справочн
 - ЛР 5 — Claude Opus 5.5: ревью схемы, ограничений CHECK, GRANT и RLS справочника; Claude Haiku 4.5: seed.sql.
 - ЛР 6 — Claude Opus 5.5: политики владельца (USING / WITH CHECK) и план проверки двумя аккаунтами; Claude Sonnet 5: форма входа и состояние сессии.
 - ЛР 7 — Claude Sonnet 5: запросы с фильтрами и связью games → platforms; Claude Opus 5.5: выбор ON DELETE RESTRICT для справочника.
+- ЛР 8 — Claude Sonnet 5: каркас Express и runtime-валидация; Claude Haiku 4.5: тесты граничных случаев и docs/api.md.
 
 ## Текущие ограничения
 
 В поиске по названию символы `%` и `_` работают как шаблон PostgreSQL (`ilike`):
 `%` — любая строка, `_` — один символ. Длина строки поиска ограничена 50 символами.
+
+API сводки пока не проверяет пользователя: браузер сам присылает набор игр.
+Сводка по данным из базы с проверкой токена появится в ЛР 9.

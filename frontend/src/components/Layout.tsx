@@ -22,6 +22,7 @@ export function Layout({ auth }: LayoutProps) {
           <nav aria-label="Основная навигация">
             <NavLink to="/games" end>Мои игры</NavLink>
             <NavLink to="/games/new">Добавить игру</NavLink>
+            <NavLink to="/summary">Сводка</NavLink>
           </nav>
         )}
 

@@ -201,6 +201,24 @@ h1 { margin: 24px 0 16px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 
+/* Сводка */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 24px 0 0;
+}
+.summary div {
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.summary dt { color: var(--muted); font-size: 14px; }
+.summary dd { margin: 4px 0 0; font-size: 28px; font-weight: bold; }
+.summary-hint { margin-top: 16px; }
+
 /* Форма */
 
 .game-form {

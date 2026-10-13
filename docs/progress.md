@@ -160,3 +160,25 @@ Site URL `http://localhost:5173`, Redirect URL `http://localhost:5173/**`.
 7. Аккаунт B открывает адрес игры A и её редактирование — «Игра не найдена».
 8. `delete from public.platforms where id = 'pc';` при наличии игр на PC — ошибка внешнего ключа 23503.
 9. Сбой сети при сохранении — ошибка, поля целы; двойное нажатие «Сохранить» — одна запись.
+
+## ЛР 8 — Node API и экран сводки
+
+Коммит: тег `lab-8`.
+
+Добавлен отдельный пакет `backend` (Node.js, Express, TypeScript, ESM): `GET /api/health`
+и временный `POST /api/summary/games`. Сервер проверяет JSON во время выполнения, считает
+три показателя чистой функцией `calculateGameSummary`, отвечает в конверте `{ data }` или
+`{ error }`, обрабатывает 404 и непредвиденные ошибки без stack trace. CORS разрешает только
+адрес интерфейса из `FRONTEND_ORIGIN`. Во frontend добавлены `services/summaryService.ts`
+и страница `/summary`. Контракт — в `docs/api.md`.
+
+Проверка:
+
+1. Backend: `npm run typecheck`, `npm test` (5 тестов), `npm run build`, `npm start`.
+2. `curl http://localhost:3000/api/health` → `{"status":"ok"}`.
+3. Верное тело → 200 и сводка; пустой набор → нули; неверный статус, тело без `items`
+   и повреждённый JSON → 400; `/api/summary/tasks` и `/api/unknown` → 404 (команды в `docs/api.md`).
+4. Открыть «Сводка» → «Рассчитать»: в Network запрос `POST http://localhost:3000/api/summary/games`.
+5. Изменить статус игры на «Пройдена», вернуться в «Сводку» — прежний результат сброшен,
+   после расчёта «Пройдено» и доля увеличились.
+6. Остановить backend → «Рассчитать»: «API сводки недоступен…», список игр и формы работают.

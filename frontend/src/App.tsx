@@ -13,6 +13,8 @@ import './App.css'
 
 export default function App() {
   const auth = useAuth()
+  // Токен текущей сессии для запросов к своему Node API
+  const accessToken = auth.status === 'authenticated' ? auth.session.access_token : ''
 
   return (
     <Routes>
@@ -21,14 +23,14 @@ export default function App() {
           auth.status === 'authenticated' ? <Navigate to="/games" replace /> : <AuthPage />
         } />
 
-        {/* Личные страницы: каждая сама загружает свои данные из базы */}
+        {/* Личные страницы: каждая сама загружает свои данные */}
         <Route element={<RequireAuth auth={auth} />}>
           <Route index element={<Navigate to="/games" replace />} />
           <Route path="games" element={<GameListPage />} />
-          <Route path="games/new" element={<AddGamePage />} />
+          <Route path="games/new" element={<AddGamePage accessToken={accessToken} />} />
           <Route path="games/:id" element={<GameDetailsPage />} />
           <Route path="games/:id/edit" element={<EditGamePage />} />
-          <Route path="summary" element={<SummaryPage />} />
+          <Route path="summary" element={<SummaryPage accessToken={accessToken} />} />
         </Route>
 
         <Route path="*" element={<NotFoundPage />} />

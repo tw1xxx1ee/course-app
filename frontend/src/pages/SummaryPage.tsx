@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { useGames } from '../hooks/useGames'
-import { emptyGameFilters } from '../services/gameService'
+import { usePlatforms } from '../hooks/usePlatforms'
 import { getGameSummary } from '../services/summaryService'
 import type { GameSummary } from '../services/summaryService'
+
+type SummaryPageProps = { accessToken: string }
 
 type SummaryState =
   | { status: 'idle' }
@@ -10,32 +11,16 @@ type SummaryState =
   | { status: 'error'; message: string }
   | { status: 'success'; summary: GameSummary }
 
-export function SummaryPage() {
-  // Страница при каждом открытии заново читает игры, поэтому сводка не устаревает
-  const { gamesState, retry } = useGames(emptyGameFilters)
+export function SummaryPage({ accessToken }: SummaryPageProps) {
+  const [platformId, setPlatformId] = useState('all')
   const [summaryState, setSummaryState] = useState<SummaryState>({ status: 'idle' })
-
-  if (gamesState.status === 'loading') {
-    return <p role="status">Загружаем игры…</p>
-  }
-
-  if (gamesState.status === 'error') {
-    return (
-      <div className="empty">
-        <p role="alert" className="error">{gamesState.message}</p>
-        <button type="button" className="button-secondary" onClick={retry}>
-          Повторить
-        </button>
-      </div>
-    )
-  }
-
-  const games = gamesState.games
+  const { platformsState } = usePlatforms()
+  const platforms = platformsState.status === 'success' ? platformsState.platforms : []
 
   async function handleCalculate() {
     setSummaryState({ status: 'loading' })
     try {
-      const summary = await getGameSummary(games)
+      const summary = await getGameSummary(accessToken, platformId)
       setSummaryState({ status: 'success', summary })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Не удалось рассчитать сводку.'
@@ -46,19 +31,38 @@ export function SummaryPage() {
   return (
     <section>
       <h1>Сводка</h1>
-      <p>Игр в коллекции: {games.length}. Расчёт выполняет сервер.</p>
+      <p>Сервер читает ваши игры из базы и считает показатели.</p>
 
-      <button type="button" className="button"
-        disabled={summaryState.status === 'loading'} onClick={handleCalculate}>
-        {summaryState.status === 'loading' ? 'Считаем…' : 'Рассчитать'}
-      </button>
+      <div className="filters-form">
+        <div className="filter-field">
+          <label htmlFor="summary-platform">Платформа</label>
+          <select id="summary-platform" value={platformId}
+            onChange={(event) => {
+              setPlatformId(event.target.value)
+              // Прежний результат относился к другому условию
+              setSummaryState({ status: 'idle' })
+            }}>
+            <option value="all">Все платформы</option>
+            {platforms.map((platform) => (
+              <option key={platform.id} value={platform.id}>{platform.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="actions">
+          <button type="button" className="button"
+            disabled={summaryState.status === 'loading'} onClick={handleCalculate}>
+            {summaryState.status === 'loading' ? 'Считаем…' : 'Рассчитать'}
+          </button>
+        </div>
+      </div>
 
       {summaryState.status === 'idle' && (
-        <p className="hint summary-hint">Сводка ещё не рассчитана.</p>
+        <p className="hint">Сводка ещё не рассчитана.</p>
       )}
 
       {summaryState.status === 'error' && (
-        <p role="alert" className="error summary-hint">{summaryState.message}</p>
+        <p role="alert" className="error">{summaryState.message}</p>
       )}
 
       {summaryState.status === 'success' && (

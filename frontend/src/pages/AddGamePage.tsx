@@ -12,11 +12,13 @@ const emptyGame: GameDraft = {
   note: '',
 }
 
-export function AddGamePage() {
+type AddGamePageProps = { accessToken: string }
+
+export function AddGamePage({ accessToken }: AddGamePageProps) {
   const navigate = useNavigate()
 
   async function handleSave(draft: GameDraft) {
-    const game = await createGame(draft)
+    const game = await createGame(draft, accessToken)
     navigate(`/games/${game.id}`)
   }
 

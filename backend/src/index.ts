@@ -1,17 +1,19 @@
 import express from 'express'
 import type { NextFunction, Request, Response } from 'express'
 import cors from 'cors'
-import { HttpError } from './errors.js'
-import { calculateGameSummary, parseSummaryBody } from './summary.js'
+import { getAuth, requireUser } from './auth.js'
+import { frontendOrigin, port } from './config.js'
+import { HttpError, mapSupabaseError } from './errors.js'
+import { gameColumns, parseCreateGame } from './games.js'
+import { calculateGameSummary, loadGamesForSummary, parseSummaryQuery } from './summary.js'
+import { createUserClient } from './supabase.js'
 
 const app = express()
-const port = Number(process.env.PORT ?? 3000)
-const frontendOrigin = process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173'
 
 app.use(cors({
   origin: frontendOrigin,
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Authorization', 'Content-Type'],
 }))
 app.use(express.json({ limit: '100kb' }))
 
@@ -19,14 +21,38 @@ app.get('/api/health', (_request, response) => {
   response.status(200).json({ status: 'ok' })
 })
 
-// Временный маршрут ЛР 8: браузер присылает игры, сервер считает сводку
-app.post('/api/summary/:kind', (request, response) => {
-  if (request.params.kind !== 'games') {
-    throw new HttpError(404, 'NOT_FOUND', 'Вид сводки не найден')
-  }
+// Создание игры: владелец берётся из проверенного токена, а не из тела запроса
+app.post('/api/games', requireUser, async (request, response) => {
+  const input = parseCreateGame(request.body)
+  const { token, userId } = getAuth(response)
+  const supabase = createUserClient(token)
 
-  const items = parseSummaryBody(request.body)
-  const data = calculateGameSummary(items)
+  const { data, error } = await supabase
+    .from('games')
+    .insert({
+      owner_id: userId,
+      platform_id: input.platformId,
+      title: input.title,
+      genre: input.genre,
+      status: input.status,
+      rating: input.rating,
+      note: input.note,
+    })
+    .select(gameColumns)
+    .single()
+
+  if (error) throw mapSupabaseError(error)
+  response.status(201).json({ data })
+})
+
+// Личная сводка: сервер сам читает игры пользователя из базы и считает показатели
+app.get('/api/summary', requireUser, async (request, response) => {
+  const platformId = parseSummaryQuery(request.query)
+  const { token } = getAuth(response)
+  const supabase = createUserClient(token)
+
+  const games = await loadGamesForSummary(supabase, platformId)
+  const data = calculateGameSummary(games)
   response.status(200).json({ data })
 })
 
@@ -42,11 +68,11 @@ function isPayloadTooLarge(error: unknown): boolean {
     'type' in error && error.type === 'entity.too.large'
 }
 
-// Общий обработчик ошибок: клиент получает только код и сообщение
+// Общий обработчик ошибок: клиент получает только код, сообщение и ошибки полей
 app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
   if (error instanceof HttpError) {
     response.status(error.status).json({
-      error: { code: error.code, message: error.message },
+      error: { code: error.code, message: error.message, fields: error.fields },
     })
     return
   }

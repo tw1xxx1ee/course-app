@@ -1,11 +1,13 @@
-import { HttpError } from './errors.js'
+import { HttpError, mapSupabaseError } from './errors.js'
+import type { GameStatus } from './games.js'
+import type { UserClient } from './supabase.js'
 
-const STATUSES = ['planned', 'playing', 'completed']
-const MAX_ITEMS = 500
+const PAGE_SIZE = 500
+const MAX_PLATFORM_ID_LENGTH = 50
 
 // Для расчёта нужен только статус игры
 export type SummaryGame = {
-  status: 'planned' | 'playing' | 'completed'
+  status: GameStatus
 }
 
 export type GameSummary = {
@@ -22,25 +24,43 @@ export function calculateGameSummary(items: SummaryGame[]): GameSummary {
   return { total, completed, completedPercent }
 }
 
-function isSummaryGame(value: unknown): value is SummaryGame {
-  if (typeof value !== 'object' || value === null) return false
-  if (!('status' in value)) return false
-  return typeof value.status === 'string' && STATUSES.includes(value.status)
+// Необязательный параметр ?platformId=pc: сводка только по одной платформе
+export function parseSummaryQuery(query: unknown): string | null {
+  if (typeof query !== 'object' || query === null || !('platformId' in query)) {
+    return null
+  }
+
+  const platformId = query.platformId
+  if (typeof platformId !== 'string' || platformId.trim() === '' ||
+    platformId.length > MAX_PLATFORM_ID_LENGTH) {
+    throw new HttpError(400, 'VALIDATION_ERROR', 'platformId должен быть непустой строкой')
+  }
+  return platformId.trim()
 }
 
-// Проверяет тело запроса во время выполнения: типы TypeScript этого не делают
-export function parseSummaryBody(value: unknown): SummaryGame[] {
-  if (typeof value !== 'object' || value === null || !('items' in value)) {
-    throw new HttpError(400, 'VALIDATION_ERROR', 'Ожидается JSON-объект с полем items')
-  }
+// Читает игры пользователя страницами, чтобы сводка учла все строки, а не первые 500.
+// Чужих строк здесь не будет: их отсекает RLS по токену клиента.
+export async function loadGamesForSummary(
+  supabase: UserClient, platformId: string | null,
+): Promise<SummaryGame[]> {
+  const result: SummaryGame[] = []
 
-  const items = value.items
-  if (!Array.isArray(items) || items.length > MAX_ITEMS) {
-    throw new HttpError(400, 'VALIDATION_ERROR', `items должен быть массивом до ${MAX_ITEMS} элементов`)
-  }
-  if (!items.every(isSummaryGame)) {
-    throw new HttpError(400, 'VALIDATION_ERROR', 'У каждого элемента должен быть status: planned, playing или completed')
-  }
+  for (let from = 0; ; from += PAGE_SIZE) {
+    let request = supabase
+      .from('games')
+      .select('status')
+      .order('created_at')
+      // id уникален: строки с одинаковым created_at не теряются и не повторяются между страницами
+      .order('id')
+      .range(from, from + PAGE_SIZE - 1)
+    if (platformId !== null) {
+      request = request.eq('platform_id', platformId)
+    }
 
-  return items
+    const { data, error } = await request.overrideTypes<SummaryGame[], { merge: false }>()
+    if (error) throw mapSupabaseError(error)
+
+    result.push(...data)
+    if (data.length < PAGE_SIZE) return result
+  }
 }

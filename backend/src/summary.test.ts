@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { calculateGameSummary, parseSummaryBody } from './summary.js'
+import { calculateGameSummary, parseSummaryQuery } from './summary.js'
 import { HttpError } from './errors.js'
 
 test('empty game list', () => {
@@ -23,12 +23,9 @@ test('all games completed', () => {
   assert.deepEqual(result, { total: 2, completed: 2, completedPercent: 100 })
 })
 
-test('valid body is accepted', () => {
-  assert.deepEqual(parseSummaryBody({ items: [{ status: 'playing' }] }), [{ status: 'playing' }])
-})
-
-test('body without items and unknown status are rejected', () => {
-  assert.throws(() => parseSummaryBody({}), HttpError)
-  assert.throws(() => parseSummaryBody({ items: 'games' }), HttpError)
-  assert.throws(() => parseSummaryBody({ items: [{ status: 'done' }] }), HttpError)
+test('summary query: platform is optional', () => {
+  assert.equal(parseSummaryQuery({}), null)
+  assert.equal(parseSummaryQuery({ platformId: 'pc' }), 'pc')
+  assert.throws(() => parseSummaryQuery({ platformId: '' }), HttpError)
+  assert.throws(() => parseSummaryQuery({ platformId: ['pc', 'ps5'] }), HttpError)
 })

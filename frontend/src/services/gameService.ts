@@ -1,5 +1,6 @@
 import type { Game, GameDraft, GameStatus } from '../types/game'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from './api'
 
 export type GameFilters = {
   query: string
@@ -52,7 +53,7 @@ function fromRow(row: GameRow): Game {
   }
 }
 
-// owner_id не передаём: база подставит текущего пользователя
+// Поля для изменения игры. owner_id не передаём: владельца менять нельзя
 function toWrite(draft: GameDraft) {
   return {
     platform_id: draft.platform,
@@ -101,16 +102,20 @@ export async function getGame(id: string): Promise<Game | null> {
   return data ? fromRow(data) : null
 }
 
-export async function createGame(draft: GameDraft): Promise<Game> {
-  const { data, error } = await supabase
-    .from('games')
-    .insert(toWrite(draft))
-    .select(gameColumns)
-    .single()
-    .overrideTypes<GameRow, { merge: false }>()
-
-  if (error) throw new Error(`Не удалось создать игру: ${error.message}`)
-  return fromRow(data)
+// Создание идёт через свой Node API: React → Node → Supabase
+export async function createGame(draft: GameDraft, accessToken: string): Promise<Game> {
+  const row = await apiFetch<GameRow>('/api/games', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({
+      platformId: draft.platform,
+      title: draft.title,
+      genre: draft.genre,
+      status: draft.status,
+      rating: draft.rating,
+      note: draft.note,
+    }),
+  })
+  return fromRow(row)
 }
 
 export async function updateGame(id: string, draft: GameDraft): Promise<Game> {

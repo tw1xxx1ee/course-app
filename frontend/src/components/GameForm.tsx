@@ -7,7 +7,7 @@ import { PlatformSelect } from './PlatformSelect'
 
 type GameFormProps = {
   initialValues: GameDraft
-  onSave: (draft: GameDraft) => void
+  onSave: (draft: GameDraft) => Promise<void>
   onCancel: () => void
 }
 
@@ -18,12 +18,13 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
     initialValues.rating === null ? '' : String(initialValues.rating)
   )
   const [error, setError] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const { platformsState, retry } = usePlatforms()
 
   const isPlatformSelected = platformsState.status === 'success' &&
     platformsState.platforms.some((platform) => platform.id === draft.platform)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     if (!isPlatformSelected) {
@@ -50,7 +51,15 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
     }
 
     setError('')
-    onSave({ ...draft, title, genre, rating, note: draft.note.trim() })
+    setIsSaving(true)
+    try {
+      await onSave({ ...draft, title, genre, rating, note: draft.note.trim() })
+    } catch (error: unknown) {
+      // Черновик остаётся в форме, можно исправить и отправить снова
+      setError(error instanceof Error ? error.message : 'Не удалось сохранить игру.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -99,8 +108,8 @@ export function GameForm({ initialValues, onSave, onCancel }: GameFormProps) {
       {error && <p role="alert" className="error">{error}</p>}
 
       <div className="actions">
-        <button type="submit" className="button" disabled={!isPlatformSelected}>
-          Сохранить
+        <button type="submit" className="button" disabled={!isPlatformSelected || isSaving}>
+          {isSaving ? 'Сохраняем…' : 'Сохранить'}
         </button>
         <button type="button" className="button-secondary" onClick={onCancel}>
           Отмена

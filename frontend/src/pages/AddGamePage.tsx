@@ -3,7 +3,7 @@ import { GameForm } from '../components/GameForm'
 import type { GameDraft } from '../types/game'
 
 type AddGamePageProps = {
-  onCreate: (draft: GameDraft) => string
+  onCreate: (draft: GameDraft) => Promise<string>
 }
 
 const emptyGame: GameDraft = {
@@ -18,8 +18,8 @@ const emptyGame: GameDraft = {
 export function AddGamePage({ onCreate }: AddGamePageProps) {
   const navigate = useNavigate()
 
-  function handleSave(draft: GameDraft) {
-    const id = onCreate(draft)
+  async function handleSave(draft: GameDraft) {
+    const id = await onCreate(draft)
     navigate(`/games/${id}`)
   }
 

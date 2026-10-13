@@ -48,6 +48,9 @@ nav a {
 }
 nav a.active { background: var(--accent-light); font-weight: bold; }
 
+.account { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.account-email { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
+
 h1 { margin: 24px 0 16px; }
 
 /* Список игр */
@@ -202,13 +205,3 @@ h1 { margin: 24px 0 16px; }
 .hint { margin: 0; font-size: 14px; color: var(--muted); }
 .error { margin: 0; color: var(--danger); }
 .field-message { display: flex; align-items: center; gap: 12px; }
-
-/* Пояснение о временном хранении */
-
-.notice {
-  margin: 0 0 16px;
-  padding: 8px 12px;
-  border-left: 4px solid var(--accent);
-  background: var(--accent-light);
-  color: var(--muted);
-}

@@ -11,3 +11,8 @@ export type Game = {
 }
 
 export type GameDraft = Omit<Game, 'id'>
+
+export type GamesState =
+  | { status: 'loading' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; games: Game[] }

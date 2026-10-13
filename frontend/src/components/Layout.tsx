@@ -1,19 +1,41 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
+import type { AuthState } from '../hooks/useAuth'
+import { supabase } from '../lib/supabase'
 
-export function Layout() {
+type LayoutProps = { auth: AuthState }
+
+export function Layout({ auth }: LayoutProps) {
+  const [signOutError, setSignOutError] = useState('')
+
+  async function handleSignOut() {
+    const { error } = await supabase.auth.signOut({ scope: 'local' })
+    setSignOutError(error ? 'Не удалось выйти. Попробуйте ещё раз.' : '')
+  }
+
   return (
     <div className="app">
       <header className="app-header">
         <Link to="/games" className="app-title">Каталог игр</Link>
-        <nav aria-label="Основная навигация">
-          <NavLink to="/games" end>Мои игры</NavLink>
-          <NavLink to="/games/new">Добавить игру</NavLink>
-        </nav>
+
+        {auth.status === 'authenticated' && (
+          <nav aria-label="Основная навигация">
+            <NavLink to="/games" end>Мои игры</NavLink>
+            <NavLink to="/games/new">Добавить игру</NavLink>
+          </nav>
+        )}
+
+        {auth.status === 'authenticated' && (
+          <div className="account">
+            <span className="account-email">{auth.session.user.email}</span>
+            <button type="button" className="button-secondary" onClick={handleSignOut}>
+              Выйти
+            </button>
+          </div>
+        )}
       </header>
 
-      <p className="notice" role="note">
-        Игры хранятся только в памяти страницы: после обновления вернётся демонстрационный набор.
-      </p>
+      {signOutError && <p role="alert" className="error">{signOutError}</p>}
 
       <main><Outlet /></main>
     </div>

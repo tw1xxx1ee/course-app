@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import type { Game } from '../types/game'
 import { StatusBadge } from '../components/StatusBadge'
@@ -5,13 +6,15 @@ import { getPlatformName, usePlatforms } from '../hooks/usePlatforms'
 
 type GameDetailsPageProps = {
   games: Game[]
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void>
 }
 
 export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
   const { id } = useParams()
   const navigate = useNavigate()
   const { platformsState } = usePlatforms()
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const game = games.find((item) => item.id === id)
 
   if (!game) {
@@ -21,6 +24,20 @@ export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
         <Link to="/games">← Все игры</Link>
       </section>
     )
+  }
+
+  async function handleDelete(id: string, title: string) {
+    if (!window.confirm(`Удалить игру «${title}»?`)) return
+
+    setIsDeleting(true)
+    setDeleteError('')
+    try {
+      await onDelete(id)
+      navigate('/games', { replace: true })
+    } catch (error: unknown) {
+      setDeleteError(error instanceof Error ? error.message : 'Не удалось удалить игру.')
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -42,15 +59,13 @@ export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
 
       <div className="actions">
         <Link to={`/games/${game.id}/edit`} className="button">Редактировать</Link>
-        <button type="button" className="button-danger" onClick={() => {
-          if (window.confirm(`Удалить игру «${game.title}»?`)) {
-            onDelete(game.id)
-            navigate('/games', { replace: true })
-          }
-        }}>
-          Удалить
+        <button type="button" className="button-danger" disabled={isDeleting}
+          onClick={() => handleDelete(game.id, game.title)}>
+          {isDeleting ? 'Удаляем…' : 'Удалить'}
         </button>
       </div>
+
+      {deleteError && <p role="alert" className="error">{deleteError}</p>}
     </section>
   )
 }

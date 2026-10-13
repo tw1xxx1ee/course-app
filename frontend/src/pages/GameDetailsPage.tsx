@@ -1,38 +1,30 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import type { Game } from '../types/game'
+import { GameStateMessage } from '../components/GameStateMessage'
 import { StatusBadge } from '../components/StatusBadge'
-import { getPlatformName, usePlatforms } from '../hooks/usePlatforms'
+import { useGame } from '../hooks/useGame'
+import { deleteGame } from '../services/gameService'
 
-type GameDetailsPageProps = {
-  games: Game[]
-  onDelete: (id: string) => Promise<void>
-}
-
-export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
+export function GameDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { platformsState } = usePlatforms()
+  const { gameState, retry } = useGame(id)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
-  const game = games.find((item) => item.id === id)
 
-  if (!game) {
-    return (
-      <section>
-        <h1>Игра не найдена</h1>
-        <Link to="/games">← Все игры</Link>
-      </section>
-    )
+  if (gameState.status !== 'success') {
+    return <GameStateMessage gameState={gameState} onRetry={retry} />
   }
 
-  async function handleDelete(id: string, title: string) {
-    if (!window.confirm(`Удалить игру «${title}»?`)) return
+  const game = gameState.game
+
+  async function handleDelete() {
+    if (!window.confirm(`Удалить игру «${game.title}»?`)) return
 
     setIsDeleting(true)
     setDeleteError('')
     try {
-      await onDelete(id)
+      await deleteGame(game.id)
       navigate('/games', { replace: true })
     } catch (error: unknown) {
       setDeleteError(error instanceof Error ? error.message : 'Не удалось удалить игру.')
@@ -48,7 +40,7 @@ export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
 
       <dl className="details-list">
         <dt>Платформа</dt>
-        <dd>{getPlatformName(platformsState, game.platform)}</dd>
+        <dd>{game.platformName}</dd>
         <dt>Жанр</dt>
         <dd>{game.genre}</dd>
         <dt>Оценка</dt>
@@ -60,7 +52,7 @@ export function GameDetailsPage({ games, onDelete }: GameDetailsPageProps) {
       <div className="actions">
         <Link to={`/games/${game.id}/edit`} className="button">Редактировать</Link>
         <button type="button" className="button-danger" disabled={isDeleting}
-          onClick={() => handleDelete(game.id, game.title)}>
+          onClick={handleDelete}>
           {isDeleting ? 'Удаляем…' : 'Удалить'}
         </button>
       </div>

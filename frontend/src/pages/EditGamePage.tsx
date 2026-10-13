@@ -1,25 +1,20 @@
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { GameForm } from '../components/GameForm'
-import type { Game, GameDraft } from '../types/game'
+import { GameStateMessage } from '../components/GameStateMessage'
+import { useGame } from '../hooks/useGame'
+import { updateGame } from '../services/gameService'
+import type { GameDraft } from '../types/game'
 
-type EditGamePageProps = {
-  games: Game[]
-  onUpdate: (id: string, draft: GameDraft) => Promise<void>
-}
-
-export function EditGamePage({ games, onUpdate }: EditGamePageProps) {
+export function EditGamePage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const game = games.find((item) => item.id === id)
+  const { gameState, retry } = useGame(id)
 
-  if (!game) {
-    return (
-      <section>
-        <h1>Игра не найдена</h1>
-        <Link to="/games">← Все игры</Link>
-      </section>
-    )
+  if (gameState.status !== 'success') {
+    return <GameStateMessage gameState={gameState} onRetry={retry} />
   }
+
+  const game = gameState.game
 
   const initialValues: GameDraft = {
     title: game.title,
@@ -30,16 +25,19 @@ export function EditGamePage({ games, onUpdate }: EditGamePageProps) {
     note: game.note,
   }
 
+  // Страница игры после перехода заново загрузит сохранённую запись из базы
+  async function handleSave(draft: GameDraft) {
+    const saved = await updateGame(game.id, draft)
+    navigate(`/games/${saved.id}`)
+  }
+
   return (
     <section>
       <h1>Редактирование игры</h1>
       <GameForm
         key={game.id}
         initialValues={initialValues}
-        onSave={async (draft) => {
-          await onUpdate(game.id, draft)
-          navigate(`/games/${game.id}`)
-        }}
+        onSave={handleSave}
         onCancel={() => navigate(`/games/${game.id}`)}
       />
     </section>

@@ -1,26 +1,50 @@
-import type { Game, GameDraft } from '../types/game'
+import type { Game, GameDraft, GameStatus } from '../types/game'
 import { supabase } from '../lib/supabase'
 
-// Строка таблицы games: имена столбцов как в базе
+export type GameFilters = {
+  query: string
+  status: 'all' | GameStatus
+  platformId: 'all' | string
+}
+
+export const emptyGameFilters: GameFilters = {
+  query: '',
+  status: 'all',
+  platformId: 'all',
+}
+
+// Строка таблицы games вместе со связанной платформой
 type GameRow = {
   id: string
   owner_id: string
   platform_id: string
   title: string
   genre: string
-  status: Game['status']
+  status: GameStatus
   rating: number | null
   note: string
   created_at: string
+  platforms: { id: string; name: string } | null
 }
 
-const gameColumns = 'id, owner_id, platform_id, title, genre, status, rating, note, created_at'
+const gameColumns = `
+  id, owner_id, platform_id, title, genre,
+  status, rating, note, created_at,
+  platforms(id, name)
+`
+
+// Код ошибки PostgreSQL: строка не является корректным uuid
+const INVALID_UUID = '22P02'
 
 function fromRow(row: GameRow): Game {
+  if (row.platforms === null) {
+    throw new Error('У игры не найдена платформа.')
+  }
   return {
     id: row.id,
     title: row.title,
     platform: row.platform_id,
+    platformName: row.platforms.name,
     genre: row.genre,
     status: row.status,
     rating: row.rating,
@@ -40,15 +64,41 @@ function toWrite(draft: GameDraft) {
   }
 }
 
-export async function getGames(): Promise<Game[]> {
-  const { data, error } = await supabase
+export async function getGames(filters: GameFilters): Promise<Game[]> {
+  let request = supabase
     .from('games')
     .select(gameColumns)
     .order('created_at', { ascending: false })
+
+  // В ilike символы % и _ работают как шаблон: % — любая строка, _ — один символ
+  const query = filters.query.trim()
+  if (query) request = request.ilike('title', `%${query}%`)
+  if (filters.status !== 'all') {
+    request = request.eq('status', filters.status)
+  }
+  if (filters.platformId !== 'all') {
+    request = request.eq('platform_id', filters.platformId)
+  }
+
+  const { data, error } = await request
     .overrideTypes<GameRow[], { merge: false }>()
 
   if (error) throw new Error(`Не удалось загрузить игры: ${error.message}`)
   return data.map(fromRow)
+}
+
+// Возвращает null, если игры нет или она принадлежит другому пользователю
+export async function getGame(id: string): Promise<Game | null> {
+  const { data, error } = await supabase
+    .from('games')
+    .select(gameColumns)
+    .eq('id', id)
+    .maybeSingle()
+    .overrideTypes<GameRow, { merge: false }>()
+
+  if (error?.code === INVALID_UUID) return null
+  if (error) throw new Error(`Не удалось загрузить игру: ${error.message}`)
+  return data ? fromRow(data) : null
 }
 
 export async function createGame(draft: GameDraft): Promise<Game> {
@@ -63,13 +113,17 @@ export async function createGame(draft: GameDraft): Promise<Game> {
   return fromRow(data)
 }
 
-export async function updateGame(id: string, draft: GameDraft): Promise<void> {
-  const { error } = await supabase
+export async function updateGame(id: string, draft: GameDraft): Promise<Game> {
+  const { data, error } = await supabase
     .from('games')
     .update(toWrite(draft))
     .eq('id', id)
+    .select(gameColumns)
+    .single()
+    .overrideTypes<GameRow, { merge: false }>()
 
   if (error) throw new Error(`Не удалось изменить игру: ${error.message}`)
+  return fromRow(data)
 }
 
 export async function deleteGame(id: string): Promise<void> {

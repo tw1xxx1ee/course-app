@@ -42,10 +42,3 @@ export function usePlatforms() {
 
   return { platformsState, retry }
 }
-
-// Название платформы по id; пока справочник не загружен, показываем многоточие
-export function getPlatformName(platformsState: PlatformsState, id: string): string {
-  if (platformsState.status !== 'success') return '…'
-  const platform = platformsState.platforms.find((item) => item.id === id)
-  return platform ? platform.name : id
-}

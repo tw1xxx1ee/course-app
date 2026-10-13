@@ -133,7 +133,7 @@ h1 { margin: 24px 0 16px; }
 }
 .empty p { margin-top: 0; }
 
-/* Фильтр */
+/* Фильтры */
 
 .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 
@@ -150,7 +150,28 @@ h1 { margin: 24px 0 16px; }
   border-color: var(--accent);
   color: #ffffff;
 }
-.chip-count { margin-left: 6px; opacity: 0.7; }
+
+.filters-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.filters-form .actions { margin-top: 0; }
+.filter-field { display: grid; gap: 4px; flex: 1 1 160px; min-width: 0; }
+.filter-field label { font-size: 14px; color: var(--muted); }
+.filter-field input,
+.filter-field select {
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
 
 /* Дополнительные кнопки */
 

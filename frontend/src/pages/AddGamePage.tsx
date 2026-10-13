@@ -1,10 +1,7 @@
 import { useNavigate } from 'react-router'
 import { GameForm } from '../components/GameForm'
+import { createGame } from '../services/gameService'
 import type { GameDraft } from '../types/game'
-
-type AddGamePageProps = {
-  onCreate: (draft: GameDraft) => Promise<string>
-}
 
 const emptyGame: GameDraft = {
   title: '',
@@ -15,12 +12,12 @@ const emptyGame: GameDraft = {
   note: '',
 }
 
-export function AddGamePage({ onCreate }: AddGamePageProps) {
+export function AddGamePage() {
   const navigate = useNavigate()
 
   async function handleSave(draft: GameDraft) {
-    const id = await onCreate(draft)
-    navigate(`/games/${id}`)
+    const game = await createGame(draft)
+    navigate(`/games/${game.id}`)
   }
 
   return (

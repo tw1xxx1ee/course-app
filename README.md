@@ -19,7 +19,8 @@ React, TypeScript, Vite, React Router, Supabase (PostgreSQL, Auth). Node.js 24.1
 
 1. В проекте Supabase выполнить в SQL Editor по порядку:
    `supabase/migrations/202610060001_initial_schema.sql`,
-   `supabase/migrations/202610130001_games_owner_policies.sql`, затем `supabase/seed.sql`.
+   `supabase/migrations/202610130001_games_owner_policies.sql`,
+   `supabase/migrations/202610130002_games_platform_link.sql`, затем `supabase/seed.sql`.
 2. Скопировать `frontend/.env.example` в `frontend/.env.local` и подставить свои значения:
 
 | Переменная | Что это |
@@ -58,11 +59,12 @@ npm run preview
 - Регистрация, вход и выход по email и паролю; личные страницы закрыты без входа.
 - Игры хранятся в Supabase и сохраняются после перезагрузки; каждый пользователь видит
   и изменяет только свои записи.
-- Список игр и карточка игры по адресу.
+- Список игр и карточка игры по адресу; название платформы приходит из базы вместе с игрой.
+- Поиск и фильтры выполняются запросом к базе: часть названия, статус, платформа.
+  Запрос уходит по кнопке «Применить», «Сбросить» возвращает весь список.
 - Добавление, редактирование (одна общая форма) и удаление игры с подтверждением;
   на время запроса кнопка блокируется, при ошибке черновик остаётся в форме.
 - Проверка формы: обязательные название, платформа и жанр; оценка от 1 до 10 или не указана.
-- Фильтр по статусу: кнопки с количеством игр, «Все» сбрасывает фильтр.
 - Справочник платформ загружается из таблицы `platforms` в Supabase; форма показывает
   загрузку, ошибку, пустой ответ, кнопки «Повторить» и «Обновить справочник»,
   черновик при этом не теряется.
@@ -92,6 +94,11 @@ npm run preview
 Ограничения `games`: название 1–100 символов, жанр 1–50, статус из трёх значений,
 оценка от 1 до 10 или пусто.
 
+Связь `games.platform_id → platforms.id`: `ON DELETE RESTRICT` — платформу, которая
+используется в играх, удалить нельзя; `ON UPDATE CASCADE`. Платформы — справочник,
+из интерфейса они не создаются и не удаляются. Индексы: `(owner_id, status)` и `(platform_id)`
+под фильтры списка.
+
 Модель доступа: `platforms` читают все (и гости); `games` доступна только роли `authenticated`
 и только строкам с `owner_id = auth.uid()` — отдельные политики RLS на SELECT, INSERT,
 UPDATE и DELETE. Защищённые маршруты в интерфейсе — удобство, границу доступа задаёт база.
@@ -100,29 +107,32 @@ UPDATE и DELETE. Защищённые маршруты в интерфейсе 
 
 ```
 frontend/src/
-  App.tsx                       сессия, загрузка игр из базы и маршруты
+  App.tsx                       сессия и маршруты
   main.tsx                      запуск React и роутера
-  types/game.ts                 типы игры, черновика формы и состояния загрузки
+  types/game.ts                 типы игры и черновика формы
   types/platform.ts             тип платформы
   data/gameStatuses.ts          статусы и их русские подписи
   components/Layout.tsx         шапка, навигация, email пользователя и выход
   components/RequireAuth.tsx    пускает на страницы только после входа
-  components/RequireGames.tsx   показывает страницы после загрузки игр
+  components/GameFiltersForm.tsx  панель поиска и фильтров
+  components/GameStateMessage.tsx «загружаем», ошибка или «игра не найдена»
   components/GameCard.tsx       карточка игры в списке
   components/StatusBadge.tsx    цветной значок статуса
   components/GameForm.tsx       форма добавления и редактирования
   components/PlatformSelect.tsx выбор платформы и состояния загрузки
   pages/AuthPage.tsx            вход и регистрация
-  pages/GameListPage.tsx        список игр с фильтром
+  pages/GameListPage.tsx        список игр с поиском и фильтрами
   pages/GameDetailsPage.tsx     подробности игры
   pages/AddGamePage.tsx         добавление игры
   pages/EditGamePage.tsx        редактирование игры
   pages/NotFoundPage.tsx        неизвестный адрес
   lib/supabase.ts               единый клиент Supabase
   services/platformService.ts   запрос справочника платформ из Supabase и проверка ответа
-  services/gameService.ts       чтение, создание, изменение и удаление игр в Supabase
+  services/gameService.ts       запросы игр в Supabase: список с фильтрами, одна игра, CRUD
   hooks/usePlatforms.ts         состояние загрузки платформ и повтор
   hooks/useAuth.ts              состояние сессии: проверка, гость, вошёл
+  hooks/useGames.ts             загрузка списка игр с фильтрами
+  hooks/useGame.ts              загрузка одной игры по id из адреса
 supabase/migrations/            SQL: таблицы, ограничения, права и политики
 supabase/seed.sql               начальные строки справочника платформ
 ```
@@ -140,8 +150,9 @@ supabase/seed.sql               начальные строки справочн
 - ЛР 4 — Claude Sonnet 5: проверка response.ok и структуры JSON, отмена устаревшего запроса через AbortController.
 - ЛР 5 — Claude Opus 5.5: ревью схемы, ограничений CHECK, GRANT и RLS справочника; Claude Haiku 4.5: seed.sql.
 - ЛР 6 — Claude Opus 5.5: политики владельца (USING / WITH CHECK) и план проверки двумя аккаунтами; Claude Sonnet 5: форма входа и состояние сессии.
+- ЛР 7 — Claude Sonnet 5: запросы с фильтрами и связью games → platforms; Claude Opus 5.5: выбор ON DELETE RESTRICT для справочника.
 
 ## Текущие ограничения
 
-Фильтр по статусу пока работает в браузере по уже загруженному списку; поиск и фильтры
-в запросе к базе появятся в ЛР 7.
+В поиске по названию символы `%` и `_` работают как шаблон PostgreSQL (`ilike`):
+`%` — любая строка, `_` — один символ. Длина строки поиска ограничена 50 символами.

@@ -51,10 +51,16 @@ export function PlatformSelect({ value, platformsState, onChange, onRetry }: Pla
         </div>
       )}
 
-      {isUnknown && platforms.length > 0 && (
+      {isUnknown && !isEmpty && (
         <p role="status" className="hint">
           Этой платформы нет в справочнике. Выберите другую.
         </p>
+      )}
+
+      {platforms.length > 0 && (
+        <button type="button" className="button-link" onClick={onRetry}>
+          Обновить справочник
+        </button>
       )}
     </>
   )

@@ -13,7 +13,20 @@
 
 ## Стек
 
-React, TypeScript, Vite, React Router. Node.js 24.19.0 (см. `.node-version`).
+React, TypeScript, Vite, React Router, Supabase (PostgreSQL). Node.js 24.19.0 (см. `.node-version`).
+
+## Настройка Supabase
+
+1. В проекте Supabase выполнить в SQL Editor файл `supabase/migrations/202610060001_initial_schema.sql`,
+   затем `supabase/seed.sql`.
+2. Скопировать `frontend/.env.example` в `frontend/.env.local` и подставить свои значения:
+
+| Переменная | Что это |
+|------------|---------|
+| `VITE_SUPABASE_URL` | адрес проекта Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | публичный (publishable) ключ |
+
+Secret key и `service_role` в проекте не используются. Файл `.env.local` в Git не попадает.
 
 ## Запуск
 
@@ -40,9 +53,9 @@ npm run preview
 - Добавление, редактирование (одна общая форма) и удаление игры с подтверждением.
 - Проверка формы: обязательные название, платформа и жанр; оценка от 1 до 10 или не указана.
 - Фильтр по статусу: кнопки с количеством игр, «Все» сбрасывает фильтр.
-- Справочник платформ загружается по HTTP из `frontend/public/demo/platforms.json`
-  (адрес `/demo/platforms.json`); форма показывает загрузку, ошибку, пустой ответ
-  и кнопку «Повторить», черновик при этом не теряется.
+- Справочник платформ загружается из таблицы `platforms` в Supabase; форма показывает
+  загрузку, ошибку, пустой ответ, кнопки «Повторить» и «Обновить справочник»,
+  черновик при этом не теряется.
 - Общий layout с навигацией, отдельные сообщения для неизвестной страницы и отсутствующей игры.
 
 ## Страницы
@@ -55,6 +68,16 @@ npm run preview
 | `/games/new` | добавление игры |
 | `/games/:id/edit` | редактирование игры |
 | любой другой | «Страница не найдена» |
+
+## Схема данных
+
+| Таблица | Назначение | Ключ | Связь | Доступ |
+|---------|------------|------|-------|--------|
+| `platforms` | справочник платформ | `id` (text) | — | читают все, изменять из браузера нельзя |
+| `games` | личные игры | `id` (uuid) | `platform_id → platforms.id`, `owner_id → auth.users.id` | закрыта до ЛР 6 |
+
+Ограничения `games`: название 1–100 символов, жанр 1–50, статус из трёх значений,
+оценка от 1 до 10 или пусто.
 
 ## Где что лежит
 
@@ -76,9 +99,11 @@ frontend/src/
   pages/AddGamePage.tsx         добавление игры
   pages/EditGamePage.tsx        редактирование игры
   pages/NotFoundPage.tsx        неизвестный адрес
-  services/platformService.ts   загрузка и проверка справочника платформ
+  lib/supabase.ts               единый клиент Supabase
+  services/platformService.ts   запрос справочника платформ из Supabase и проверка ответа
   hooks/usePlatforms.ts         состояние загрузки платформ и повтор
-frontend/public/demo/platforms.json  справочник платформ
+supabase/migrations/            SQL: таблицы, ограничения, права и политики
+supabase/seed.sql               начальные строки справочника платформ
 ```
 
 ## Использование ИИ
@@ -92,9 +117,10 @@ frontend/public/demo/platforms.json  справочник платформ
 - ЛР 2 — Claude Sonnet 5: маршруты React Router (Route, Outlet, useParams) и типизация props; Claude Haiku 4.5: демонстрационные записи.
 - ЛР 3 — Claude Sonnet 5: неизменяемое обновление состояния, общая форма создания и редактирования, разбор предметной проверки оценки.
 - ЛР 4 — Claude Sonnet 5: проверка response.ok и структуры JSON, отмена устаревшего запроса через AbortController.
+- ЛР 5 — Claude Opus 5.5: ревью схемы, ограничений CHECK, GRANT и RLS справочника; Claude Haiku 4.5: seed.sql.
 
 ## Текущие ограничения
 
 Записи хранятся только в памяти приложения (состояние `App`). После обновления
 страницы возвращаются демонстрационные игры из `frontend/src/data/demoGames.ts`.
-Постоянное хранение появится вместе с Supabase.
+В Supabase пока хранится только справочник платформ; игры переедут в базу в ЛР 6.

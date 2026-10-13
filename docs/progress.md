@@ -74,3 +74,27 @@
 6. Объект вместо массива, числовой id, отсутствующий name, повторяющийся id — ошибка структуры.
 7. Открыть форму на медленной сети и сразу уйти к списку — ошибок на другой странице нет.
 8. Вернуть исходный JSON, проверить CRUD, отмену и фильтр ЛР 3.
+
+## ЛР 5 — Схема данных и справочник в Supabase
+
+Коммит: тег `lab-5`.
+
+Созданы таблицы `platforms` (справочник) и `games` (личные игры) с первичными и внешними
+ключами, NOT NULL и CHECK. На обеих таблицах включён RLS; ролям `anon` и `authenticated`
+разрешён только SELECT справочника, таблица `games` закрыта. Форма читает платформы из
+Supabase через `lib/supabase.ts` и `services/platformService.ts`; файл `public/demo/platforms.json` удалён.
+
+Порядок применения SQL: `supabase/migrations/202610060001_initial_schema.sql`, затем `supabase/seed.sql`.
+
+Проверка:
+
+1. Table Editor: в `platforms` пять строк, `games` пуста.
+2. SQL Editor: вставка в `platforms` с пустым id, пустым name и повтором id отклоняется.
+3. Открыть «Добавить игру» — в Network запрос к `…supabase.co/rest/v1/platforms`, запроса к JSON нет.
+4. `update public.platforms set name = 'Компьютер' where id = 'pc';` → «Обновить справочник» —
+   новое название, введённый черновик на месте. Затем снова выполнить `seed.sql`.
+5. `delete from public.platforms;` → «Обновить справочник» — «Платформ пока нет». Выполнить
+   `seed.sql` → «Повторить» — платформы вернулись.
+6. Временно изменить имя таблицы в сервисе — ошибка и «Повторить».
+7. Запрос с publishable key: `POST /rest/v1/platforms` и `GET /rest/v1/games` → `permission denied` (42501).
+8. Без `frontend/.env.local` приложение сообщает «Не настроены переменные Supabase в .env.local».

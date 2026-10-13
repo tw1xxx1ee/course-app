@@ -210,3 +210,30 @@ Site URL `http://localhost:5173`, Redirect URL `http://localhost:5173/**`.
    отправка проходит.
 
 Сценарий двух аккаунтов выполнен на локальном Supabase с теми же миграциями.
+
+## ЛР 10 — Публикация full-stack приложения
+
+Коммит: тег `lab-10`.
+
+Backend и frontend опубликованы на Vercel двумя проектами из одного репозитория:
+`game-catalog-api` (папка `backend`) и `game-catalog` (папка `frontend`). Backend проверяет
+`PORT`, слушает `0.0.0.0`, требует `FRONTEND_ORIGIN` и разрешает в CORS только этот адрес
+с заголовками `Authorization` и `Content-Type`. Для frontend добавлен `vercel.json`
+с правилом SPA fallback. Адреса, команды и переменные — в `docs/deployment.md`.
+
+- Приложение: https://game-catalog-three.vercel.app
+- API: https://game-catalog-api-mauve.vercel.app/api/health
+
+Проверка:
+
+1. Локально: backend `npm ci`, `npm run typecheck`, `npm test`, `npm run build`, `npm start`;
+   frontend `npm ci`, `npm run build`.
+2. Публичный `/api/health` → 200; `/api/summary` и `POST /api/games` без токена и со случайным
+   токеном → 401; неизвестный маршрут → 404.
+3. Preflight `OPTIONS /api/games` с адреса приложения → 204 и заголовки
+   `Access-Control-Allow-*`; для чужого адреса браузер ответ не прочитает.
+4. Адреса `/games`, `/games/123/edit`, `/summary`, `/unknown` открываются напрямую
+   и отдают приложение; гость попадает на `/auth`.
+5. В собранном JavaScript есть только адрес Supabase, publishable key и адрес API;
+   своих ссылок на localhost и секретных ключей нет.
+6. Полный сценарий с регистрацией, двумя аккаунтами и телефоном — по списку в `docs/deployment.md`.

@@ -5,6 +5,13 @@
 - **Автор:** Чумаченко Даня, группа 24ИС
 - **Тема:** Каталог игр (вариант 5)
 
+## Опубликованная версия
+
+- Приложение: https://game-catalog-three.vercel.app
+- API: https://game-catalog-api-mauve.vercel.app/api/health
+
+Как устроена публикация — в [docs/deployment.md](docs/deployment.md).
+
 ## Основной сценарий
 
 Каталог игр помогает игроку вести личную коллекцию. Пользователь добавляет игру,
@@ -36,7 +43,7 @@ Frontend: React, TypeScript, Vite, React Router. Backend: Node.js, Express, Type
 |------------|---------|
 | `SUPABASE_URL` | тот же адрес проекта Supabase |
 | `SUPABASE_PUBLISHABLE_KEY` | тот же публичный ключ |
-| `FRONTEND_ORIGIN` | адрес интерфейса для CORS, локально `http://localhost:5173` |
+| `FRONTEND_ORIGIN` | точный адрес интерфейса для CORS, локально `http://localhost:5173` |
 | `PORT` | порт API, локально 3000 |
 
 Secret key и `service_role` в проекте не используются. Файлы `.env.local` и `.env` в Git не попадают.
@@ -188,6 +195,8 @@ backend/src/
   errors.ts                     ошибка с HTTP-статусом и перевод ошибок базы
   *.test.ts                     тесты расчёта и проверок
 docs/api.md                     описание маршрутов API
+docs/deployment.md              публикация: адреса, настройки, переменные
+frontend/vercel.json            правило: любой адрес приложения отдаёт index.html
 supabase/migrations/            SQL: таблицы, ограничения, права и политики
 supabase/seed.sql               начальные строки справочника платформ
 ```
@@ -208,6 +217,7 @@ supabase/seed.sql               начальные строки справочн
 - ЛР 7 — Claude Sonnet 5: запросы с фильтрами и связью games → platforms; Claude Opus 5.5: выбор ON DELETE RESTRICT для справочника.
 - ЛР 8 — Claude Sonnet 5: каркас Express и runtime-валидация; Claude Haiku 4.5: тесты граничных случаев и docs/api.md.
 - ЛР 9 — Claude Opus 5.5: проверка токена через getUser, клиент Supabase на запрос, ревью безопасности; несколько параллельных агентов прогоняли проверки двумя аккаунтами.
+- ЛР 10 — Claude Fable 5.1 и мультиагентная проверка: настройка публикации, проверка опубликованной версии (health, 401, CORS, SPA fallback) и сверка проекта с методичками.
 
 ## Текущие ограничения
 

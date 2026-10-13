@@ -2,7 +2,7 @@ import express from 'express'
 import type { NextFunction, Request, Response } from 'express'
 import cors from 'cors'
 import { getAuth, requireUser } from './auth.js'
-import { frontendOrigin, port } from './config.js'
+import { frontendOrigin, host, port } from './config.js'
 import { HttpError, mapSupabaseError } from './errors.js'
 import { gameColumns, parseCreateGame } from './games.js'
 import { calculateGameSummary, loadGamesForSummary, parseSummaryQuery } from './summary.js'
@@ -12,7 +12,7 @@ const app = express()
 
 app.use(cors({
   origin: frontendOrigin,
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Authorization', 'Content-Type'],
 }))
 app.use(express.json({ limit: '100kb' }))
@@ -98,4 +98,6 @@ app.use((error: unknown, _request: Request, response: Response, _next: NextFunct
   })
 })
 
-app.listen(port, () => console.log(`API: http://localhost:${port}`))
+app.listen(port, host, () => {
+  console.log(`API is listening on ${host}:${port}`)
+})
